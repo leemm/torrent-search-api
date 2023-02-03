@@ -1,0 +1,8 @@
+{
+    "providers": {
+        "ThePirateBay": { "baseUrl" : "https://piratebay.pro" },
+        "1337x": { "baseUrl" : "https://1337x-to.pages.dev", "searchUrl": "|selector:form:property:action|?search={query}" },
+        "KickassTorrents": { "baseUrl" : "https://kickasstorrents.id", "searchUrl": "/usearch/{query}" },
+        "Eztv": { "baseUrl" : "https://eztv.torrentsbay.org" }
+    }
+}
