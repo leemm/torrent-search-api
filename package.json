@@ -1,11 +1,9 @@
 {
   "name": "torrent-search-api",
-  "version": "2.1.4",
+  "version": "3.0.1",
   "description": "Yet another node torrent scraper based on x-ray. (Support iptorrents, torrentleech, torrent9, Yyggtorrent, ThePiratebay, torrentz2, 1337x, KickassTorrent, Rarbg, TorrentProject, Yts, Limetorrents, Eztv)",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest watch",
     "lint": "eslint ."
   },
   "keywords": [
@@ -28,11 +26,11 @@
     "eztv",
     "limetorrents"
   ],
-  "author": "Jimmy Laurent",
+  "author": "Lee McCormick, Jimmy Laurent",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/JimmyLaurent/torrent-search-api.git"
+    "url": "git://github.com/leemm/torrent-search-api.git"
   },
   "dependencies": {
     "add-subtract-date": "^1.0.15",
@@ -58,13 +56,6 @@
     "lint-staged": "^6.1.1",
     "nock": "^9.1.6",
     "prettier": "^1.10.2"
-  },
-  "jest": {
-    "testResultsProcessor": "jest-junit",
-    "testEnvironment": "node"
-  },
-  "jest-junit": {
-    "output": "./test-results/junit.xml"
   },
   "prettier": {
     "printWidth": 100,
