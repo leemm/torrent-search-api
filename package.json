@@ -1,6 +1,6 @@
 {
   "name": "torrent-search-api",
-  "version": "3.0.1",
+  "version": "3.0.3",
   "description": "Yet another node torrent scraper based on x-ray. (Support iptorrents, torrentleech, torrent9, Yyggtorrent, ThePiratebay, torrentz2, 1337x, KickassTorrent, Rarbg, TorrentProject, Yts, Limetorrents, Eztv)",
   "main": "index.js",
   "scripts": {
@@ -34,7 +34,6 @@
   },
   "dependencies": {
     "add-subtract-date": "^1.0.15",
-    "cloudscraper": "^4.6.0",
     "date-format-parse": "^0.2.7",
     "filesize-parser": "^1.5.0",
     "lodash": "^4.17.15",

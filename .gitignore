@@ -4,4 +4,4 @@ package-lock.json
 coverage
 test-results
 test.js
-torents.json
+torrents.json
