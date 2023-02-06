@@ -1,40 +1,45 @@
 # TorrentSearchApi
 
-[![npm](https://img.shields.io/npm/dm/torrent-search-api.svg?maxAge=2592000)](https://npm-stat.com/charts.html?package=torrent-search-api)
+This is a fork and reworking of https://github.com/JimmyLaurent/torrent-search-api designed to work server side, and adding support for:
 
-Yet another node torrent search api based on x-ray.
+- Proxy/Mirrors of popular torrent sites via a configuration
+- Always returning the mirror url and, where possible, a direct link to the torrent file
+- Browser spoofing via Puppeteer
+- Removed broken providers, and fixed the remaining
+- Removed Cloudflare bypass it no longer works
 
 ## Install
 
 ```bash
-npm install torrent-search-api
+npm i https://github.com/leemm/torrent-search-api
 ```
+
+You will also need chromium installing. https://command-not-found.com/chromium-browser
 
 ## Supported providers
 
-- TorrentLeech: cookie authentification
-- IpTorrents: credentials and cookie authentification
-- Torrent9
-- Torrentz2
-- 1337x
-- ThePirateBay
-- YggTorrent : credentials and cookie authentification
-- KickassTorrents
-- Rarbg
-- TorrentProject
-- Yts
-- Limetorrents
-- Eztv
+Some providers are faster than others due to the amount of functionality required to parse magnets and torrent files. Everything is scraped live data, there is no cache within this module.
+
+| Provider | Speed | Requires Auth |
+| --- | ----------- | ----------- |
+| 1337x | Medium | |
+| Eztv | Fast | |
+| KickassTorrents | Fast | |
+| Rarbg | Slow | |
+| ThePirateBay | Fast | |
+| Torrent9 | Slow | |
+| TorrentLeech | Medium | Yes |
+| TorrentProject | Slow | |
+| Yts | Medium | |
+| Ytsme | Medium | |
 
 ## Features
 
 - **Search:** search torrents on multiples providers.
 
-- **Torrent details:** get details about torrents (raw scraped html).
+- **Support for proxies/mirrors:** in the UK most commercial ISPs will block torrent sites if not using a vpn. You can now provide a `mirrors` object which allows overriding the default url and search provided by the providers in this API (see below for example).
 
-- **Download:** download torrents files.
-
-- **Easily extensible:** you can easily add new providers and enjoy built-in features like cloudfare bypass.
+- **Download:** get direct links of magnet and torrent files (where available)
  
 
 ## Quick Example
@@ -42,10 +47,10 @@ npm install torrent-search-api
 ```js
 const TorrentSearchApi = require('torrent-search-api');
 
-TorrentSearchApi.enableProvider('Torrent9');
+TorrentSearchApi.enableProvider('KickassTorrents');
 
-// Search '1080' in 'Movies' category and limit to 20 results
-const torrents = await TorrentSearchApi.search('1080', 'Movies', 20);
+// Search '1080p'
+const torrents = await TorrentSearchApi.search('1080p');
 ```
 
 # Torrent Search API
@@ -67,9 +72,15 @@ const activeProviders = TorrentSearchApi.getActiveProviders();
         categories: ['All', 'Movies', 'TV', 'Music', 'Apps', 'Books', 'Top100']
     },
     {
-        name: 'IpTorrents',
-        public: false,
-        categories: ['All', 'Movies', 'TV', 'Games', 'Music']
+        name: '1337x',
+        public: true,
+        categories: [
+            'All',          'Movies',
+            'TV',           'Games',
+            'Music',        'Anime',
+            'Applications', 'Documentaries',
+            'Other',        'Top100'
+        ]
     },
     ...
 }
@@ -117,13 +128,48 @@ TorrentSearchApi.isProviderActive('1337x');
 
 ```
 
+
+### Set config
+
+```js
+
+await TorrentSearchApi.setConfig({
+    chromiumPath: '/usr/bin/chromium-browser',
+    debug: false,
+    mirrors: {
+        providers: {
+            // Replace default baseUrl of the pirate bay with new Url
+            ThePirateBay: { baseUrl : 'https://piratebay.pro' },
+            // Replace default baseUrl and searchUrl of kickass torrents with new Urls
+            KickassTorrents: { baseUrl : 'https://kickasstorrents.id', searchUrl: '/usearch/{query}' },
+            // Replace default baseUrl of 1337x with new Url
+            // This is a special situation for searchUrl. The roor url for searchUrl is generated on the fly and must be scraped from the page.
+            // This finds the search form, in the html, and grabs the url from the action attribute.
+            '1337x': { baseUrl : 'https://1337x-to.pages.dev', searchUrl: '|selector:form:property:action|?search={query}' }
+        }
+    },
+    mirrorsUrl: 'https://site.com/mystuff/mirrors.json'
+});
+
+```
+
+This config and all properties are completely optional.
+
+| Option | Description | Default |
+| --- | ----------- | ----------- |
+| `chromiumPath` | path to chromium or chrome browser | default location for os |
+| `debug` | if search requires puppeteer then disable headless mode by setting this true | false |
+| `mirrors` | override provider baseUrl and searchUrls. See above for examples. | |
+| `mirrorsUrl` | url of mirrors.json, an easier way to manage your proxies without needing to re-deploy any application using this package | undefined |
+
+
 ### Search torrent
 
 The result is an array of torrents sorted by seeders with more or less properties depending on the provider.
 
 ```js
 
-// Search on actives providers
+// Search all actives providers
 // Query: 1080
 // Category: Movies (optional)
 // Limit: 20 (optional)
@@ -137,81 +183,6 @@ const torrents = await TorrentSearchApi.search(['IpTorrents', 'Torrent9'], '1080
 
 ```
 
-### Torrent details
-
-```js
-
-// Get details (raw scraped html)
-// torrent: taken from a search result
-const torrentHtmlDetail = await TorrentSearchApi.getTorrentDetails(torrent);
-
-```
-
-### Torrent magnet
-
-```js
-
-// Get magnet url
-// torrent: taken from a search result
-const magnet = await TorrentSearchApi.getMagnet(torrent);
-
-```
-
-### Download torrent
-
-```js
-
-// Download a buffer
-// torrent: taken from a search result
-const buffer = await TorrentSearchApi.downloadTorrent(torrent);
-
-// Download torrent and write it to the disk
-// torrent: taken from a search result
-await TorrentSearchApi.downloadTorrent(torrent, filnamePath);
-```
-
-### Load custom providers
-
-You can code and add your custom providers (see provider definition format in existing providers)
-Don't forget to enable your provider if you intend to use it.
-
-```js
-
-// load multipe providers
-// from a TorrentProvider custom class definition or instance
-const MyCustomProvider = require('./MyCustomProvider');
-TorrentSearchApi.loadProvider(MyCustomProvider);
-
-// from a provider object definition
-TorrentSearchApi.loadProvider( {/* provider object definition */});
-
-// from an absolute path to class definition or json object definition
-const path = require('path');
-const providerFullPath = path.join(__dirname, './lib/providers/MyCustomProvider');
-TorrentSearchApi.loadProviders(providerFullPath);
-
-// load multipe providers within a directory
-// only absolute path are allowed
-// it loads every *.json and *.js file
-const path = require('path');
-const providerDirFullPath = path.join(__dirname, './lib/providers/');
-TorrentSearchApi.loadProviders(providerDirFullPath);
-
-// load multipe providers
-const MyCustomProvider = require('./MyCustomProvider');
-TorrentSearchApi.loadProviders(MyCustomProvider, {/* provider object definition */}, ...);
-
-```
-
-### Remove provider
-
-```js
-
-// Remove provider
-TorrentSearchApi.removeProvider('MyCustomProvider');
-
-```
-
 ### Create TorrentSearchApi instance
 
 If you want to create an instance of the api without loading all the default providers and only load the ones that you want
@@ -222,16 +193,6 @@ If you want to create an instance of the api without loading all the default pro
 const createApi = require('torrent-search-api/createApi');
 const TorrentSearchApi = createApi(/* same arguments as "loadProviders" method */)
 
-```
-
-### Create a new provider
-
-Check "test/createProvider.test.js" file if you want to create a new provider.
-
-Running tests command
-
-```bash
-npm run test:watch
 ```
 
 ### Override provider config
